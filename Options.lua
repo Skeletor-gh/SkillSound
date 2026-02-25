@@ -296,18 +296,27 @@ function ns:InitializeOptions()
     self.optionsPanel = panel
 
     if Settings and Settings.RegisterCanvasLayoutCategory then
-        local parentPanel = CreateFrame("Frame", "SkillSoundParentCategory", UIParent)
-        local parentCategory = Settings.RegisterCanvasLayoutCategory(parentPanel, "Skeletor")
-        Settings.RegisterAddOnCategory(parentCategory)
-
-        local childCategory = Settings.RegisterCanvasLayoutSubcategory(parentCategory, panel, "SkillSound")
-        Settings.RegisterAddOnCategory(childCategory)
+        local category = Settings.RegisterCanvasLayoutCategory(panel, "SkillSound")
+        Settings.RegisterAddOnCategory(category)
+        self.optionsCategoryID = category:GetID()
     elseif InterfaceOptions_AddCategory then
-        local parent = CreateFrame("Frame")
-        parent.name = "Skeletor"
-        InterfaceOptions_AddCategory(parent)
-
-        panel.parent = "Skeletor"
+        panel.name = "SkillSound"
         InterfaceOptions_AddCategory(panel)
+    end
+end
+
+function ns:OpenOptions()
+    if not self.optionsPanel then
+        self:InitializeOptions()
+    end
+
+    if Settings and Settings.OpenToCategory and self.optionsCategoryID then
+        Settings.OpenToCategory(self.optionsCategoryID)
+        return
+    end
+
+    if InterfaceOptionsFrame_OpenToCategory and self.optionsPanel then
+        InterfaceOptionsFrame_OpenToCategory(self.optionsPanel)
+        InterfaceOptionsFrame_OpenToCategory(self.optionsPanel)
     end
 end

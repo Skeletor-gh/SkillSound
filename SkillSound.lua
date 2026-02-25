@@ -119,6 +119,15 @@ end
 
 local eventFrame = CreateFrame("Frame")
 
+local function RegisterSlashCommands()
+    SLASH_SKILLSOUND1 = "/skillsound"
+    SlashCmdList.SKILLSOUND = function()
+        if ns.OpenOptions then
+            ns:OpenOptions()
+        end
+    end
+end
+
 eventFrame:SetScript("OnEvent", function(_, event, ...)
     if event == "ADDON_LOADED" then
         local loadedAddon = ...
@@ -136,6 +145,8 @@ eventFrame:SetScript("OnEvent", function(_, event, ...)
         if ns.InitializeOptions then
             ns:InitializeOptions()
         end
+
+        RegisterSlashCommands()
     elseif event == "UNIT_SPELLCAST_SUCCEEDED" then
         local unitTarget, _, spellID = ...
         if unitTarget ~= "player" then
