@@ -19,3 +19,8 @@ A World of Warcraft 12.0 addon that plays configurable sounds when:
 3. Reload UI (`/reload`)
 
 Each custom sound is registered into LibSharedMedia and can be selected in the options UI.
+
+
+## Patch notes
+
+- **v0.1.0**: Initial public build with configurable spell and aura triggers, plus custom sound preview support.
