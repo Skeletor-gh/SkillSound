@@ -13,6 +13,7 @@ ns.AUTHOR = C_AddOns.GetAddOnMetadata(addonName, "Author") or "skeletor-gh"
 ns.DEFAULT_CHANNEL = "Master"
 
 ns.defaults = {
+    enabled = true,
     spellEvents = {},
     auraEvents = {},
 }
@@ -41,6 +42,10 @@ function ns:GetSoundPath(soundKey)
 end
 
 function ns:PlayConfiguredSound(soundKey, channel)
+    if not SkillSoundDB or SkillSoundDB.enabled == false then
+        return
+    end
+
     local soundPath = self:GetSoundPath(soundKey)
     if not soundPath then
         return
@@ -54,7 +59,7 @@ local function IsEnabled(entry)
 end
 
 local function HandleSpellSucceeded(spellID)
-    if not spellID then
+    if not spellID or SkillSoundDB.enabled == false then
         return
     end
 
@@ -84,7 +89,7 @@ local function AuraTypeMatches(entry, aura)
 end
 
 local function HandleAuraAdded(aura)
-    if not aura or not aura.spellId then
+    if not aura or not aura.spellId or SkillSoundDB.enabled == false then
         return
     end
 
