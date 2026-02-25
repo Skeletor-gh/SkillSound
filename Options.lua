@@ -273,13 +273,23 @@ function ns:InitializeOptions()
         local tab = CreateFrame("Button", "$parentTab" .. i, panel, "OptionsFrameTabButtonTemplate")
         tab:SetID(i)
         tab:SetPoint("BOTTOMLEFT", paneContainer, "TOPLEFT", (i - 1) * 110, -2)
-        PanelTemplates_TabResize(tab, 0)
+
+        -- Dragonflight-era PanelTemplates_TabResize expects tab.Text to be populated.
+        -- Some template paths don't assign this member, so map it explicitly.
+        if not tab.Text then
+            tab.Text = _G[tab:GetName() .. "Text"]
+        end
+
         panel[key .. "Tab"] = tab
     end
 
     panel.spellsTab:SetText("Spells")
     panel.aurasTab:SetText("Auras")
     panel.customTab:SetText("CustomSounds")
+
+    for _, key in ipairs(TAB_KEYS) do
+        PanelTemplates_TabResize(panel[key .. "Tab"], 0)
+    end
 
     PanelTemplates_SetNumTabs(panel, #TAB_KEYS)
 
