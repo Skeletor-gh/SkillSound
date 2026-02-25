@@ -1,7 +1,9 @@
 local addonName, ns = ...
 
-SkillSound = SkillSound or {}
-ns = SkillSound
+-- Use WoW's shared addon namespace table so all addon files operate on the
+-- same object. Keep the global `SkillSound` symbol as an alias for debugging
+-- or macro access.
+SkillSound = ns
 
 local LSM = LibStub("LibSharedMedia-3.0")
 
