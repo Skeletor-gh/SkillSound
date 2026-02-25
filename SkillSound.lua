@@ -19,6 +19,8 @@ local auraState = {
     HARMFUL = {},
 }
 
+local auraRefreshPending = false
+
 local spellLookup = {}
 local auraLookup = {
     HELPFUL = {},
@@ -127,6 +129,10 @@ function ns.RebuildLookups()
 end
 
 local function BuildAuraSnapshot(filter)
+    if InCombatLockdown and InCombatLockdown() then
+        return {}
+    end
+
     local snapshot = {}
     local auraFilter = NormalizeAuraFilter(filter)
 
@@ -181,6 +187,11 @@ local function HandleAuraGains(filter, previous, current)
 end
 
 local function RefreshAuraStateAndTrigger()
+    if InCombatLockdown and InCombatLockdown() then
+        auraRefreshPending = true
+        return
+    end
+
     local helpfulNow = BuildAuraSnapshot("HELPFUL")
     local harmfulNow = BuildAuraSnapshot("HARMFUL")
 
@@ -243,6 +254,7 @@ SkillSound:SetScript("OnEvent", function(_, event, ...)
         ns.RebuildLookups()
         auraState.HELPFUL = BuildAuraSnapshot("HELPFUL")
         auraState.HARMFUL = BuildAuraSnapshot("HARMFUL")
+        auraRefreshPending = false
 
         if ns.Options and ns.Options.Initialize then
             ns.Options:Initialize()
@@ -267,6 +279,7 @@ SkillSound:SetScript("OnEvent", function(_, event, ...)
 
         SkillSound:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED")
         SkillSound:RegisterEvent("UNIT_AURA")
+        SkillSound:RegisterEvent("PLAYER_REGEN_ENABLED")
     elseif event == "UNIT_SPELLCAST_SUCCEEDED" then
         local unitTarget, _, spellID = ...
         if unitTarget ~= "player" or not spellID then
@@ -287,6 +300,11 @@ SkillSound:SetScript("OnEvent", function(_, event, ...)
             return
         end
         RefreshAuraStateAndTrigger()
+    elseif event == "PLAYER_REGEN_ENABLED" then
+        if auraRefreshPending then
+            RefreshAuraStateAndTrigger()
+            auraRefreshPending = false
+        end
     end
 end)
 
