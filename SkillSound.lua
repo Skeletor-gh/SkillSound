@@ -91,6 +91,19 @@ local function PlayConfiguredSound(soundKey)
     end
 end
 
+function ns.PlayPreviewSound(soundKey)
+    local soundPathOrKit = ResolveSoundPath(soundKey)
+    if not soundPathOrKit then
+        return
+    end
+
+    if type(soundPathOrKit) == "number" then
+        PlaySound(soundPathOrKit, SkillSoundDB and SkillSoundDB.outputChannel or "Master")
+    else
+        PlaySoundFile(soundPathOrKit, SkillSoundDB and SkillSoundDB.outputChannel or "Master")
+    end
+end
+
 function ns.RebuildLookups()
     wipe(spellLookup)
     wipe(auraLookup.HELPFUL)

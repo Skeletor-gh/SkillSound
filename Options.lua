@@ -16,6 +16,38 @@ local function ParseSpellID(value)
     return math.floor(id)
 end
 
+local function ResolveSpellID(value)
+    if not value then
+        return nil
+    end
+
+    local trimmed = tostring(value):match("^%s*(.-)%s*$")
+    if trimmed == "" then
+        return nil
+    end
+
+    local numericID = ParseSpellID(trimmed)
+    if numericID then
+        return numericID
+    end
+
+    if C_Spell and C_Spell.GetSpellInfo then
+        local info = C_Spell.GetSpellInfo(trimmed)
+        if info and info.spellID then
+            return info.spellID
+        end
+    end
+
+    if GetSpellInfo then
+        local _, _, _, _, _, _, spellID = GetSpellInfo(trimmed)
+        if spellID then
+            return spellID
+        end
+    end
+
+    return nil
+end
+
 local function WipeRows(rows)
     for _, row in ipairs(rows) do
         row:Hide()
@@ -46,6 +78,9 @@ local function BuildSoundDropdown(frame, width, getValue, onValueChanged)
             info.func = function()
                 onValueChanged(soundName)
                 UIDropDownMenu_SetText(dropdown, soundName)
+                if ns.PlayPreviewSound then
+                    ns.PlayPreviewSound(soundName)
+                end
             end
             UIDropDownMenu_AddButton(info, level)
         end
@@ -240,13 +275,12 @@ function Options:Initialize()
 
     self.spellIDInput = CreateFrame("EditBox", nil, panel, "InputBoxTemplate")
     self.spellIDInput:SetAutoFocus(false)
-    self.spellIDInput:SetSize(100, 24)
+    self.spellIDInput:SetSize(160, 24)
     self.spellIDInput:SetPoint("TOPLEFT", spellHeader, "BOTTOMLEFT", 0, -8)
-    self.spellIDInput:SetNumeric(true)
 
     local spellIDLabel = panel:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     spellIDLabel:SetPoint("BOTTOMLEFT", self.spellIDInput, "TOPLEFT", 0, 4)
-    spellIDLabel:SetText("Spell ID")
+    spellIDLabel:SetText("Spell ID or Name")
 
     self.spellSoundChoice = ""
     self.spellSoundDropdown = BuildSoundDropdown(panel, 170, function() return self.spellSoundChoice end, function(newValue)
@@ -259,9 +293,9 @@ function Options:Initialize()
     addSpell:SetPoint("LEFT", self.spellSoundDropdown, "RIGHT", -8, 0)
     addSpell:SetText("Add Spell")
     addSpell:SetScript("OnClick", function()
-        local spellID = ParseSpellID(self.spellIDInput:GetText())
+        local spellID = ResolveSpellID(self.spellIDInput:GetText())
         if not spellID then
-            UIErrorsFrame:AddMessage("SkillSound: invalid spell ID", 1, 0.1, 0.1)
+            UIErrorsFrame:AddMessage("SkillSound: unknown spell (use ID or exact name)", 1, 0.1, 0.1)
             return
         end
 
@@ -280,13 +314,12 @@ function Options:Initialize()
 
     self.auraIDInput = CreateFrame("EditBox", nil, panel, "InputBoxTemplate")
     self.auraIDInput:SetAutoFocus(false)
-    self.auraIDInput:SetSize(100, 24)
+    self.auraIDInput:SetSize(160, 24)
     self.auraIDInput:SetPoint("TOPLEFT", auraHeader, "BOTTOMLEFT", 0, -8)
-    self.auraIDInput:SetNumeric(true)
 
     local auraIDLabel = panel:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     auraIDLabel:SetPoint("BOTTOMLEFT", self.auraIDInput, "TOPLEFT", 0, 4)
-    auraIDLabel:SetText("Aura Spell ID")
+    auraIDLabel:SetText("Aura Spell ID or Name")
 
     self.auraFilterChoice = "HELPFUL"
     self.auraFilterDropdown = CreateFrame("Frame", nil, panel, "UIDropDownMenuTemplate")
@@ -317,9 +350,9 @@ function Options:Initialize()
     addAura:SetPoint("LEFT", self.auraSoundDropdown, "RIGHT", -8, 0)
     addAura:SetText("Add Aura")
     addAura:SetScript("OnClick", function()
-        local spellID = ParseSpellID(self.auraIDInput:GetText())
+        local spellID = ResolveSpellID(self.auraIDInput:GetText())
         if not spellID then
-            UIErrorsFrame:AddMessage("SkillSound: invalid aura spell ID", 1, 0.1, 0.1)
+            UIErrorsFrame:AddMessage("SkillSound: unknown aura spell (use ID or exact name)", 1, 0.1, 0.1)
             return
         end
 
