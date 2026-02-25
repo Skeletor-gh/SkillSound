@@ -14,6 +14,32 @@ local AURA_TYPE_OPTIONS = {
     "HARMFUL",
 }
 
+local function ResolveSpellID(inputValue, fieldLabel)
+    local normalized = inputValue and strtrim(inputValue) or ""
+    if normalized == "" then
+        return nil, string.format("SkillSound: Enter a %s name or ID.", fieldLabel)
+    end
+
+    local numericID = tonumber(normalized)
+    if numericID and numericID > 0 then
+        return numericID
+    end
+
+    if C_Spell and C_Spell.GetSpellInfo then
+        local spellInfo = C_Spell.GetSpellInfo(normalized)
+        if spellInfo and spellInfo.spellID then
+            return spellInfo.spellID
+        end
+    end
+
+    local _, _, _, _, _, _, resolvedSpellID = GetSpellInfo(normalized)
+    if resolvedSpellID and resolvedSpellID > 0 then
+        return resolvedSpellID
+    end
+
+    return nil, string.format("SkillSound: Could not find a spell for '%s'.", normalized)
+end
+
 local function EnsureDropdownValue(dropdown, defaultValue)
     if not dropdown.value then
         dropdown.value = defaultValue
@@ -158,7 +184,7 @@ function ns:InitializeOptions()
 
     local background = panel:CreateTexture(nil, "BACKGROUND")
     background:SetAllPoints()
-    background:SetTexture("Interface\AddOns\SkillSound\assets\skillsound")
+    background:SetTexture("Interface/AddOns/SkillSound/assets/skillsound")
     background:SetAlpha(0.30)
 
     local title = panel:CreateFontString(nil, "OVERLAY", "GameFontNormalHuge")
@@ -177,12 +203,11 @@ function ns:InitializeOptions()
     spellIDBox:SetSize(90, 24)
     spellIDBox:SetPoint("TOPLEFT", spellHeader, "BOTTOMLEFT", 0, -8)
     spellIDBox:SetAutoFocus(false)
-    spellIDBox:SetNumeric(true)
-    spellIDBox:SetMaxLetters(8)
+    spellIDBox:SetMaxLetters(128)
 
     local spellIDLabel = panel:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     spellIDLabel:SetPoint("BOTTOMLEFT", spellIDBox, "TOPLEFT", 2, 2)
-    spellIDLabel:SetText("Spell ID")
+    spellIDLabel:SetText("Spell Name or ID")
 
     local spellSoundDropdown = BuildSoundDropdown(panel, 180)
     spellSoundDropdown:SetPoint("LEFT", spellIDBox, "RIGHT", 20, -3)
@@ -202,11 +227,11 @@ function ns:InitializeOptions()
     panel.spellRows = BuildRows(spellListFrame, 6)
 
     addSpell:SetScript("OnClick", function()
-        local spellID = tonumber(spellIDBox:GetText())
+        local spellID, errorMessage = ResolveSpellID(spellIDBox:GetText(), "spell")
         EnsureDropdownValue(spellChannelDropdown, ns.DEFAULT_CHANNEL)
 
-        if not spellID or spellID <= 0 then
-            UIErrorsFrame:AddMessage("SkillSound: Enter a valid spell ID.", 1, 0.1, 0.1)
+        if not spellID then
+            UIErrorsFrame:AddMessage(errorMessage, 1, 0.1, 0.1)
             return
         end
 
@@ -229,12 +254,11 @@ function ns:InitializeOptions()
     auraIDBox:SetSize(90, 24)
     auraIDBox:SetPoint("TOPLEFT", auraHeader, "BOTTOMLEFT", 0, -8)
     auraIDBox:SetAutoFocus(false)
-    auraIDBox:SetNumeric(true)
-    auraIDBox:SetMaxLetters(8)
+    auraIDBox:SetMaxLetters(128)
 
     local auraIDLabel = panel:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     auraIDLabel:SetPoint("BOTTOMLEFT", auraIDBox, "TOPLEFT", 2, 2)
-    auraIDLabel:SetText("Aura Spell ID")
+    auraIDLabel:SetText("Aura Name or ID")
 
     local auraTypeDropdown = BuildDropdown(panel, 100, AURA_TYPE_OPTIONS, "ANY")
     auraTypeDropdown:SetPoint("LEFT", auraIDBox, "RIGHT", 10, -3)
@@ -257,12 +281,12 @@ function ns:InitializeOptions()
     panel.auraRows = BuildRows(auraListFrame, 6)
 
     addAura:SetScript("OnClick", function()
-        local auraID = tonumber(auraIDBox:GetText())
+        local auraID, errorMessage = ResolveSpellID(auraIDBox:GetText(), "aura")
         EnsureDropdownValue(auraTypeDropdown, "ANY")
         EnsureDropdownValue(auraChannelDropdown, ns.DEFAULT_CHANNEL)
 
-        if not auraID or auraID <= 0 then
-            UIErrorsFrame:AddMessage("SkillSound: Enter a valid aura spell ID.", 1, 0.1, 0.1)
+        if not auraID then
+            UIErrorsFrame:AddMessage(errorMessage, 1, 0.1, 0.1)
             return
         end
 
