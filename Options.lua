@@ -233,6 +233,24 @@ local function SetPaneEnabled(pane, enabled)
     end
 end
 
+local function ResizeTab(tab, padding)
+    local tabName = tab and tab.GetName and tab:GetName()
+    if tabName then
+        tab.Left = tab.Left or _G[tabName .. "Left"]
+        tab.Middle = tab.Middle or _G[tabName .. "Middle"]
+        tab.Right = tab.Right or _G[tabName .. "Right"]
+    end
+
+    if tab.Left and tab.Middle and tab.Right then
+        PanelTemplates_TabResize(tab, padding or 0)
+        return
+    end
+
+    local textWidth = tab.Text and tab.Text:GetStringWidth() or 0
+    local sidePadding = (TAB_SIDES_PADDING or 20) + (padding or 0)
+    tab:SetWidth(math.max(80, textWidth + sidePadding))
+end
+
 function ns:InitializeOptions()
     if self.optionsPanel then
         return
@@ -288,7 +306,7 @@ function ns:InitializeOptions()
     panel.customTab:SetText("CustomSounds")
 
     for _, key in ipairs(TAB_KEYS) do
-        PanelTemplates_TabResize(panel[key .. "Tab"], 0)
+        ResizeTab(panel[key .. "Tab"], 0)
     end
 
     PanelTemplates_SetNumTabs(panel, #TAB_KEYS)
