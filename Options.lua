@@ -294,7 +294,8 @@ function ns:InitializeOptions()
     panel.panes = {}
 
     for i, key in ipairs(TAB_KEYS) do
-        local tab = CreateFrame("Button", "$parentTab" .. i, panel, "OptionsFrameTabButtonTemplate")
+        local tabName = string.format("%sTab%d", panel:GetName(), i)
+        local tab = CreateFrame("Button", tabName, panel, "OptionsFrameTabButtonTemplate")
         tab:SetID(i)
         tab:SetPoint("BOTTOMLEFT", paneContainer, "TOPLEFT", (i - 1) * 110, -2)
 
