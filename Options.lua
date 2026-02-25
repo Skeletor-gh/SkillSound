@@ -3,6 +3,9 @@ local addonName, ns = ...
 ns.Options = ns.Options or {}
 local Options = ns.Options
 
+local ADDON_VERSION = "0.1.2"
+local ADDON_AUTHOR = "skeletor-gh"
+
 local function GetSpellName(spellID)
     local name = C_Spell and C_Spell.GetSpellName and C_Spell.GetSpellName(spellID)
     return name or ("Spell " .. tostring(spellID))
@@ -52,6 +55,16 @@ local function WipeRows(rows)
     for _, row in ipairs(rows) do
         row:Hide()
     end
+end
+
+local function AddFooter(panel)
+    local author = panel:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    author:SetPoint("BOTTOMLEFT", 16, 12)
+    author:SetText("Author: " .. ADDON_AUTHOR)
+
+    local version = panel:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    version:SetPoint("BOTTOMRIGHT", -16, 12)
+    version:SetText("v" .. ADDON_VERSION)
 end
 
 local function BuildSoundDropdown(frame, width, getValue, onValueChanged)
@@ -243,7 +256,7 @@ function Options:Refresh()
     for index, soundName in ipairs(sounds) do
         local row = self.repositoryRows[index]
         if not row then
-            row = CreateFrame("Frame", nil, self.repositoryList)
+            row = CreateFrame("Frame", nil, self.repositoryContent)
             row:SetSize(650, 20)
 
             row.name = row:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
@@ -266,6 +279,11 @@ function Options:Refresh()
 
         repositoryY = repositoryY - 22
     end
+
+    local minHeight = self.repositoryList:GetHeight()
+    local contentHeight = math.max(minHeight, #sounds * 22)
+    self.repositoryContent:SetHeight(contentHeight)
+    self.repositoryScrollFrame:SetVerticalScroll(0)
 end
 
 function Options:Initialize()
@@ -278,7 +296,7 @@ function Options:Initialize()
 
     local title = panel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     title:SetPoint("TOPLEFT", 16, -16)
-    title:SetText("SkillSound 0.1.0")
+    title:SetText("SkillSound " .. ADDON_VERSION)
 
     local subtitle = panel:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     subtitle:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -6)
@@ -287,7 +305,7 @@ function Options:Initialize()
     local background = panel:CreateTexture(nil, "BACKGROUND")
     background:SetPoint("TOPRIGHT", -12, -12)
     background:SetSize(256, 256)
-    background:SetTexture("Interface\\AddOns\\SkillSound\\assets\\skillsound")
+    background:SetTexture("Interface\\AddOns\\SkillSound\\assets\\skillsound.png")
     background:SetAlpha(0.3)
 
     self.enabledCheck = CreateFrame("CheckButton", nil, panel, "UICheckButtonTemplate")
@@ -296,6 +314,25 @@ function Options:Initialize()
     self.enabledCheck:SetScript("OnClick", function(btn)
         SkillSoundDB.enabled = btn:GetChecked() and true or false
     end)
+
+    local channelLabel = panel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    channelLabel:SetPoint("TOPLEFT", self.enabledCheck, "BOTTOMLEFT", 0, -14)
+    channelLabel:SetText("Sound output channel")
+
+    self.channelDropdown = CreateFrame("Frame", nil, panel, "UIDropDownMenuTemplate")
+    self.channelDropdown:SetPoint("TOPLEFT", channelLabel, "BOTTOMLEFT", -14, -4)
+    self.channelDropdown:SetWidth(170)
+
+    local notesTitle = panel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    notesTitle:SetPoint("TOPLEFT", self.channelDropdown, "BOTTOMLEFT", 14, -18)
+    notesTitle:SetText("Patch Notes")
+
+    local notes = panel:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    notes:SetPoint("TOPLEFT", notesTitle, "BOTTOMLEFT", 0, -8)
+    notes:SetWidth(560)
+    notes:SetJustifyH("LEFT")
+    notes:SetJustifyV("TOP")
+    notes:SetText("• Moved channel selection to the main options tab.\n• Added this patch notes section and common author/version footer on every tab.\n• Added spacing improvements for Spell and Aura trigger forms.\n• Repository tab now supports scrolling through long sound lists.\n• Sound repository now includes both LibSharedMedia sounds and custom user sound entries.")
 
     local spellsPanel = CreateFrame("Frame", "SkillSoundSpellsOptionsPanel", UIParent)
     self.spellsPanel = spellsPanel
@@ -308,22 +345,14 @@ function Options:Initialize()
     spellsSubtitle:SetPoint("TOPLEFT", spellsTitle, "BOTTOMLEFT", 0, -6)
     spellsSubtitle:SetText("Configure custom sounds for successful spell casts.")
 
-    local channelLabel = spellsPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    channelLabel:SetPoint("TOPLEFT", spellsSubtitle, "BOTTOMLEFT", 0, -12)
-    channelLabel:SetText("Sound output channel")
-
-    self.channelDropdown = CreateFrame("Frame", nil, spellsPanel, "UIDropDownMenuTemplate")
-    self.channelDropdown:SetPoint("TOPLEFT", channelLabel, "BOTTOMLEFT", -14, -4)
-    self.channelDropdown:SetWidth(170)
-
     local spellHeader = spellsPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-    spellHeader:SetPoint("TOPLEFT", self.channelDropdown, "BOTTOMLEFT", 14, -18)
+    spellHeader:SetPoint("TOPLEFT", spellsSubtitle, "BOTTOMLEFT", 0, -18)
     spellHeader:SetText("Spell Cast Triggers")
 
     self.spellIDInput = CreateFrame("EditBox", nil, spellsPanel, "InputBoxTemplate")
     self.spellIDInput:SetAutoFocus(false)
     self.spellIDInput:SetSize(160, 24)
-    self.spellIDInput:SetPoint("TOPLEFT", spellHeader, "BOTTOMLEFT", 0, -8)
+    self.spellIDInput:SetPoint("TOPLEFT", spellHeader, "BOTTOMLEFT", 0, -18)
 
     local spellIDLabel = spellsPanel:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     spellIDLabel:SetPoint("BOTTOMLEFT", self.spellIDInput, "TOPLEFT", 0, 4)
@@ -373,7 +402,7 @@ function Options:Initialize()
     self.auraIDInput = CreateFrame("EditBox", nil, aurasPanel, "InputBoxTemplate")
     self.auraIDInput:SetAutoFocus(false)
     self.auraIDInput:SetSize(160, 24)
-    self.auraIDInput:SetPoint("TOPLEFT", auraHeader, "BOTTOMLEFT", 0, -8)
+    self.auraIDInput:SetPoint("TOPLEFT", auraHeader, "BOTTOMLEFT", 0, -18)
 
     local auraIDLabel = aurasPanel:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     auraIDLabel:SetPoint("BOTTOMLEFT", self.auraIDInput, "TOPLEFT", 0, 4)
@@ -432,7 +461,7 @@ function Options:Initialize()
 
     local repositorySubtitle = repositoryPanel:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     repositorySubtitle:SetPoint("TOPLEFT", repositoryTitle, "BOTTOMLEFT", 0, -6)
-    repositorySubtitle:SetText("List of loaded custom sounds from LibSharedMedia.")
+    repositorySubtitle:SetText("List of loaded sounds from LibSharedMedia and custom user files.")
 
     local repositoryNameHeader = repositoryPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     repositoryNameHeader:SetPoint("TOPLEFT", repositorySubtitle, "BOTTOMLEFT", 0, -18)
@@ -443,8 +472,38 @@ function Options:Initialize()
     repositoryPathHeader:SetText("Source Path")
 
     self.repositoryList = CreateFrame("Frame", nil, repositoryPanel)
-    self.repositoryList:SetSize(660, 420)
+    self.repositoryList:SetSize(666, 420)
     self.repositoryList:SetPoint("TOPLEFT", repositoryNameHeader, "BOTTOMLEFT", 0, -10)
+
+    self.repositoryScrollFrame = CreateFrame("ScrollFrame", "SkillSoundRepositoryScrollFrame", repositoryPanel, "UIPanelScrollFrameTemplate")
+    self.repositoryScrollFrame:SetPoint("TOPLEFT", self.repositoryList, "TOPLEFT", 0, 0)
+    self.repositoryScrollFrame:SetPoint("BOTTOMRIGHT", self.repositoryList, "BOTTOMRIGHT", -24, 0)
+
+    self.repositoryContent = CreateFrame("Frame", nil, self.repositoryScrollFrame)
+    self.repositoryContent:SetSize(640, 420)
+    self.repositoryScrollFrame:SetScrollChild(self.repositoryContent)
+    self.repositoryScrollFrame:EnableMouseWheel(true)
+    self.repositoryScrollFrame:SetScript("OnMouseWheel", function(scrollFrame, delta)
+        local scrollBar = _G[scrollFrame:GetName() .. "ScrollBar"]
+        if not scrollBar then
+            return
+        end
+
+        local step = 22
+        local newValue = scrollBar:GetValue() - (delta * step)
+        local minValue, maxValue = scrollBar:GetMinMaxValues()
+        if newValue < minValue then
+            newValue = minValue
+        elseif newValue > maxValue then
+            newValue = maxValue
+        end
+        scrollBar:SetValue(newValue)
+    end)
+
+    AddFooter(panel)
+    AddFooter(spellsPanel)
+    AddFooter(aurasPanel)
+    AddFooter(repositoryPanel)
 
     self.spellRows = {}
     self.auraRows = {}

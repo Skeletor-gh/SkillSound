@@ -1,8 +1,8 @@
 ## Interface: 120000
 ## Title: SkillSound
 ## Notes: Play custom sounds for successful spell casts and aura gains.
-## Author: SkillSound Contributors
-## Version: 0.1.0
+## Author: skeletor-gh
+## Version: 0.1.2
 ## IconTexture: Interface\AddOns\SkillSound\assets\icon.tga
 ## SavedVariables: SkillSoundDB
 

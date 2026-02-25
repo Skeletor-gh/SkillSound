@@ -11,6 +11,7 @@ local DEFAULTS = {
     defaultSound = "",
     spellEvents = {},
     auraEvents = {},
+    customSounds = {},
 }
 
 local auraState = {

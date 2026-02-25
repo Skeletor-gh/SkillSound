@@ -1,4 +1,4 @@
-# SkillSound (v0.1.0)
+# SkillSound (v0.1.2)
 
 SkillSound is a World of Warcraft 12.0 addon that plays configurable sounds when:
 
@@ -42,6 +42,8 @@ Place your sound files under:
 `Interface\AddOns\SkillSound\assets\`
 
 Then register them in `SoundRepository.lua` by adding items to `CUSTOM_SOUNDS`.
+
+You can also define user custom sounds in saved variables under `SkillSoundDB.customSounds` using `{ key = "Name", path = "Interface\\AddOns\\SkillSound\\assets\\file.ogg" }` entries.
 
 ## User workflow
 
