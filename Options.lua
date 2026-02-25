@@ -158,7 +158,7 @@ function ns:InitializeOptions()
 
     local background = panel:CreateTexture(nil, "BACKGROUND")
     background:SetAllPoints()
-    background:SetTexture("Interface\\AddOns\\SkillSound\\assets\\skillsound")
+    background:SetTexture("Interface\AddOns\SkillSound\assets\skillsound")
     background:SetAlpha(0.30)
 
     local title = panel:CreateFontString(nil, "OVERLAY", "GameFontNormalHuge")
