@@ -12,6 +12,18 @@ A World of Warcraft 12.0 addon that plays configurable sounds when:
 - `Sounds.lua` custom sound registry framework backed by LibSharedMedia-3.0
 - `Options.lua` settings panel under **AddOns → SkillSound**
 
+## Rule management model
+
+- The options UI is intentionally **add-focused** and no longer shows per-row delete buttons.
+- Each spell/aura rule now gets a stable `ruleID` shown in the list.
+- Use slash commands for safe rule maintenance:
+  - `/skillsound list spells`
+  - `/skillsound list auras`
+  - `/skillsound remove spell <ruleID>`
+  - `/skillsound remove aura <ruleID>`
+  - `/skillsound clear spells`
+  - `/skillsound clear auras`
+
 ## Custom sounds
 
 1. Put sound files in `assets/`

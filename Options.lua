@@ -161,13 +161,8 @@ local function CreateListRow(parent, width)
 
     row.label = row:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     row.label:SetPoint("LEFT", 4, 0)
-    row.label:SetWidth(width - 72)
+    row.label:SetWidth(width - 12)
     row.label:SetJustifyH("LEFT")
-
-    row.remove = CreateFrame("Button", nil, row, "UIPanelButtonTemplate")
-    row.remove:SetSize(62, 20)
-    row.remove:SetPoint("RIGHT", -2, 0)
-    row.remove:SetText("Delete")
 
     return row
 end
@@ -181,7 +176,7 @@ local function BuildPatchNotesText()
     return string.format("v%s: Initial release with spell and aura sound triggers.", ns.VERSION)
 end
 
-local function DrawRows(content, rows, entries, formatter, onDelete, enabled)
+local function DrawRows(content, rows, entries, formatter)
     local rowWidth = content:GetWidth()
 
     for i, entry in ipairs(entries) do
@@ -197,10 +192,6 @@ local function DrawRows(content, rows, entries, formatter, onDelete, enabled)
         end
 
         row.label:SetText(formatter(entry))
-        SetWidgetEnabled(row.remove, enabled)
-        row.remove:SetScript("OnClick", function()
-            onDelete(i)
-        end)
         row:Show()
     end
 
@@ -321,7 +312,7 @@ function ns:InitializeOptions()
 
     local spellsInfo = spellsPane:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     spellsInfo:SetPoint("TOPLEFT", 10, -12)
-    spellsInfo:SetText("Add spells that should trigger a sound when cast successfully.")
+    spellsInfo:SetText("Add spells that should trigger a sound when cast successfully. Remove rules with /skillsound remove spell <ruleID>.")
 
     local spellInput = CreateFrame("EditBox", nil, spellsPane, "InputBoxTemplate")
     spellInput:SetSize(130, 24)
@@ -355,13 +346,8 @@ function ns:InitializeOptions()
             spellsPane.rows,
             ns:GetDB().spellEvents,
             function(entry)
-                return string.format("Spell %d → %s [%s]", entry.spellID, entry.soundKey or "<none>", entry.channel or ns.DEFAULT_CHANNEL)
-            end,
-            function(index)
-                table.remove(ns:GetDB().spellEvents, index)
-                DrawSpellRows()
-            end,
-            IsAddonEnabled()
+                return string.format("#%d Spell %d → %s [%s]", entry.ruleID or 0, entry.spellID, entry.soundKey or "<none>", entry.channel or ns.DEFAULT_CHANNEL)
+            end
         )
     end
 
@@ -374,12 +360,7 @@ function ns:InitializeOptions()
             return
         end
 
-        table.insert(ns:GetDB().spellEvents, {
-            spellID = spellID,
-            soundKey = spellSoundDropdown.value,
-            channel = spellChannelDropdown.value,
-            enabled = true,
-        })
+        ns:AddSpellEvent(spellID, spellSoundDropdown.value, spellChannelDropdown.value)
 
         spellInput:SetText("")
         DrawSpellRows()
@@ -396,7 +377,7 @@ function ns:InitializeOptions()
 
     local aurasInfo = aurasPane:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     aurasInfo:SetPoint("TOPLEFT", 10, -12)
-    aurasInfo:SetText("Add auras that should trigger a sound when they are gained.")
+    aurasInfo:SetText("Add auras that should trigger a sound when they are gained. Remove rules with /skillsound remove aura <ruleID>.")
 
     local auraInput = CreateFrame("EditBox", nil, aurasPane, "InputBoxTemplate")
     auraInput:SetSize(130, 24)
@@ -433,13 +414,8 @@ function ns:InitializeOptions()
             aurasPane.rows,
             ns:GetDB().auraEvents,
             function(entry)
-                return string.format("Aura %d (%s) → %s [%s]", entry.auraSpellID, entry.auraType or "ANY", entry.soundKey or "<none>", entry.channel or ns.DEFAULT_CHANNEL)
-            end,
-            function(index)
-                table.remove(ns:GetDB().auraEvents, index)
-                DrawAuraRows()
-            end,
-            IsAddonEnabled()
+                return string.format("#%d Aura %d (%s) → %s [%s]", entry.ruleID or 0, entry.auraSpellID, entry.auraType or "ANY", entry.soundKey or "<none>", entry.channel or ns.DEFAULT_CHANNEL)
+            end
         )
     end
 
@@ -453,13 +429,7 @@ function ns:InitializeOptions()
             return
         end
 
-        table.insert(ns:GetDB().auraEvents, {
-            auraSpellID = auraID,
-            auraType = auraTypeDropdown.value,
-            soundKey = auraSoundDropdown.value,
-            channel = auraChannelDropdown.value,
-            enabled = true,
-        })
+        ns:AddAuraEvent(auraID, auraTypeDropdown.value, auraSoundDropdown.value, auraChannelDropdown.value)
 
         auraInput:SetText("")
         DrawAuraRows()
@@ -510,15 +480,8 @@ function ns:InitializeOptions()
             soundRows,
             function(entry)
                 return entry
-            end,
-            function() end,
-            IsAddonEnabled()
+            end
         )
-
-        for _, row in ipairs(customPane.rows) do
-            row.remove:Hide()
-            row.label:SetWidth(customContent:GetWidth() - 12)
-        end
     end
 
     tinsert(customPane.widgets, customDropdown)
@@ -552,6 +515,8 @@ function ns:InitializeOptions()
         DrawAuraRows()
         DrawCustomRows()
     end
+
+    panel.RefreshState = RefreshState
 
     enableToggle:SetScript("OnClick", function(self)
         local enabled = self:GetChecked()
