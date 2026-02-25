@@ -279,7 +279,11 @@ function ns:InitializeOptions()
 
     local enableToggle = CreateFrame("CheckButton", nil, panel, "UICheckButtonTemplate")
     enableToggle:SetPoint("TOPLEFT", patchNotes, "BOTTOMLEFT", -2, -10)
-    enableToggle.text:SetText("Enable SkillSound")
+
+    local enableToggleLabel = enableToggle.Text or enableToggle.text
+    if enableToggleLabel then
+        enableToggleLabel:SetText("Enable SkillSound")
+    end
 
     local paneContainer = CreateFrame("Frame", nil, panel, "BackdropTemplate")
     paneContainer:SetPoint("TOPLEFT", enableToggle, "BOTTOMLEFT", 2, -18)
