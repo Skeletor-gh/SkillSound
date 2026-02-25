@@ -130,12 +130,23 @@ local function BuildAuraSnapshot(filter)
     local auraFilter = NormalizeAuraFilter(filter)
 
     if AuraUtil and AuraUtil.ForEachAura then
-        AuraUtil.ForEachAura("player", auraFilter, nil, function(aura)
-            if aura and aura.spellId then
-                snapshot[aura.spellId] = true
+        AuraUtil.ForEachAura("player", auraFilter, nil, function(...)
+            local first = ...
+
+            if type(first) == "table" then
+                local spellID = first.spellId or first.spellID
+                if spellID then
+                    snapshot[spellID] = true
+                end
+            else
+                local _, _, _, _, _, _, _, _, _, spellID = ...
+                if spellID then
+                    snapshot[spellID] = true
+                end
             end
+
             return false
-        end)
+        end, true)
     else
         local index = 1
         while true do
