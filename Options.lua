@@ -298,6 +298,7 @@ function ns:InitializeOptions()
     if Settings and Settings.RegisterCanvasLayoutCategory then
         local category = Settings.RegisterCanvasLayoutCategory(panel, "SkillSound")
         Settings.RegisterAddOnCategory(category)
+        self.optionsCategory = category
         self.optionsCategoryID = category:GetID()
     elseif InterfaceOptions_AddCategory then
         panel.name = "SkillSound"
@@ -310,9 +311,16 @@ function ns:OpenOptions()
         self:InitializeOptions()
     end
 
-    if Settings and Settings.OpenToCategory and self.optionsCategoryID then
-        Settings.OpenToCategory(self.optionsCategoryID)
-        return
+    if Settings and Settings.OpenToCategory then
+        if self.optionsCategoryID then
+            Settings.OpenToCategory(self.optionsCategoryID)
+            return
+        end
+
+        if self.optionsCategory then
+            Settings.OpenToCategory(self.optionsCategory)
+            return
+        end
     end
 
     if InterfaceOptionsFrame_OpenToCategory and self.optionsPanel then
