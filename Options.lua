@@ -253,6 +253,20 @@ local function ResizeTab(tab, padding)
     tab:SetWidth(math.max(80, textWidth + sidePadding))
 end
 
+local function EnsurePanelTabRegions(tab)
+    local tabName = tab and tab.GetName and tab:GetName()
+    if not tabName then
+        return
+    end
+
+    tab.Left = tab.Left or _G[tabName .. "Left"]
+    tab.Middle = tab.Middle or _G[tabName .. "Middle"]
+    tab.Right = tab.Right or _G[tabName .. "Right"]
+    tab.LeftActive = tab.LeftActive or _G[tabName .. "LeftActive"] or tab.Left
+    tab.MiddleActive = tab.MiddleActive or _G[tabName .. "MiddleActive"] or tab.Middle
+    tab.RightActive = tab.RightActive or _G[tabName .. "RightActive"] or tab.Right
+end
+
 function ns:InitializeOptions()
     if self.optionsPanel then
         return
@@ -298,6 +312,7 @@ function ns:InitializeOptions()
         local tab = CreateFrame("Button", tabName, panel, "OptionsFrameTabButtonTemplate")
         tab:SetID(i)
         tab:SetPoint("BOTTOMLEFT", paneContainer, "TOPLEFT", (i - 1) * 110, -2)
+        EnsurePanelTabRegions(tab)
 
         -- Dragonflight-era PanelTemplates_TabResize expects tab.Text to be populated.
         -- Some template paths don't assign this member, so map it explicitly.
