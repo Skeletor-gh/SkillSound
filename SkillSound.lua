@@ -16,6 +16,7 @@ ns.defaults = {
     enabled = true,
     spellEvents = {},
     auraEvents = {},
+    nextRuleID = 1,
 }
 
 local function CopyDefaults(source, target)
@@ -31,6 +32,163 @@ end
 
 function ns:GetDB()
     return SkillSoundDB
+end
+
+function ns:EnsureRuleIdentifiers()
+    local db = self:GetDB()
+    db.nextRuleID = tonumber(db.nextRuleID) or 1
+
+    local function Visit(entries)
+        for _, entry in ipairs(entries) do
+            if not entry.ruleID then
+                entry.ruleID = db.nextRuleID
+                db.nextRuleID = db.nextRuleID + 1
+            end
+        end
+    end
+
+    Visit(db.spellEvents)
+    Visit(db.auraEvents)
+end
+
+function ns:AddSpellEvent(spellID, soundKey, channel)
+    local db = self:GetDB()
+    self:EnsureRuleIdentifiers()
+
+    local entry = {
+        ruleID = db.nextRuleID,
+        spellID = spellID,
+        soundKey = soundKey,
+        channel = channel,
+        enabled = true,
+    }
+
+    db.nextRuleID = db.nextRuleID + 1
+    table.insert(db.spellEvents, entry)
+    return entry
+end
+
+function ns:AddAuraEvent(auraSpellID, auraType, soundKey, channel)
+    local db = self:GetDB()
+    self:EnsureRuleIdentifiers()
+
+    local entry = {
+        ruleID = db.nextRuleID,
+        auraSpellID = auraSpellID,
+        auraType = auraType,
+        soundKey = soundKey,
+        channel = channel,
+        enabled = true,
+    }
+
+    db.nextRuleID = db.nextRuleID + 1
+    table.insert(db.auraEvents, entry)
+    return entry
+end
+
+function ns:RemoveEventByRuleID(kind, ruleID)
+    local db = self:GetDB()
+    local entries = kind == "spell" and db.spellEvents or db.auraEvents
+
+    for index, entry in ipairs(entries) do
+        if entry.ruleID == ruleID then
+            table.remove(entries, index)
+            return true
+        end
+    end
+
+    return false
+end
+
+function ns:ClearEvents(kind)
+    local db = self:GetDB()
+    if kind == "spell" then
+        wipe(db.spellEvents)
+    else
+        wipe(db.auraEvents)
+    end
+end
+
+function ns:ListEvents(kind)
+    local db = self:GetDB()
+    local entries = kind == "spell" and db.spellEvents or db.auraEvents
+
+    if #entries == 0 then
+        print(string.format("SkillSound: No %s rules configured.", kind == "spell" and "spell" or "aura"))
+        return
+    end
+
+    print(string.format("SkillSound: %s rules:", kind == "spell" and "Spell" or "Aura"))
+    for _, entry in ipairs(entries) do
+        if kind == "spell" then
+            print(string.format("  #%d spell=%d sound=%s channel=%s", entry.ruleID or 0, entry.spellID or 0, entry.soundKey or "<none>", entry.channel or ns.DEFAULT_CHANNEL))
+        else
+            print(string.format("  #%d aura=%d type=%s sound=%s channel=%s", entry.ruleID or 0, entry.auraSpellID or 0, entry.auraType or "ANY", entry.soundKey or "<none>", entry.channel or ns.DEFAULT_CHANNEL))
+        end
+    end
+end
+
+function ns:RefreshOptionsPanel()
+    if self.optionsPanel and self.optionsPanel.RefreshState then
+        self.optionsPanel:RefreshState()
+    end
+end
+
+function ns:PrintSlashHelp()
+    print("SkillSound commands:")
+    print("  /skillsound list spells|auras")
+    print("  /skillsound remove spell|aura <ruleID>")
+    print("  /skillsound clear spells|auras")
+end
+
+function ns:HandleSlashCommand(message)
+    local command = message and strtrim(message) or ""
+    if command == "" or command == "help" then
+        self:PrintSlashHelp()
+        return
+    end
+
+    local verb, noun, value = strsplit(" ", command, 3)
+    verb = verb and strlower(verb)
+    noun = noun and strlower(noun)
+
+    local kindMap = {
+        spell = "spell",
+        spells = "spell",
+        aura = "aura",
+        auras = "aura",
+    }
+
+    if verb == "list" and kindMap[noun] then
+        self:ListEvents(kindMap[noun])
+        return
+    end
+
+    if verb == "remove" and kindMap[noun] then
+        local ruleID = tonumber(value)
+        if not ruleID then
+            print("SkillSound: Provide a numeric ruleID to remove.")
+            return
+        end
+
+        local removed = self:RemoveEventByRuleID(kindMap[noun], ruleID)
+        if removed then
+            print(string.format("SkillSound: Removed %s rule #%d.", kindMap[noun], ruleID))
+            self:RefreshOptionsPanel()
+        else
+            print(string.format("SkillSound: Could not find %s rule #%d.", kindMap[noun], ruleID))
+        end
+        return
+    end
+
+    if verb == "clear" and kindMap[noun] then
+        self:ClearEvents(kindMap[noun])
+        print(string.format("SkillSound: Cleared all %s rules.", kindMap[noun]))
+        self:RefreshOptionsPanel()
+        return
+    end
+
+    self:PrintSlashHelp()
 end
 
 function ns:GetSoundPath(soundKey)
@@ -135,6 +293,7 @@ eventFrame:SetScript("OnEvent", function(_, event, ...)
 
         SkillSoundDB = SkillSoundDB or {}
         CopyDefaults(ns.defaults, SkillSoundDB)
+        ns:EnsureRuleIdentifiers()
 
         if ns.RegisterCustomSounds then
             ns:RegisterCustomSounds()
@@ -179,3 +338,8 @@ end)
 eventFrame:RegisterEvent("ADDON_LOADED")
 eventFrame:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED")
 eventFrame:RegisterEvent("UNIT_AURA")
+
+SLASH_SKILLSOUND1 = "/skillsound"
+SlashCmdList.SKILLSOUND = function(message)
+    ns:HandleSlashCommand(message)
+end
