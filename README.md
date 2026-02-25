@@ -10,19 +10,7 @@ A World of Warcraft 12.0 addon that plays configurable sounds when:
 - `SkillSound.toc` with addon metadata (`author: skeletor-gh`, `version: 0.1.0`, icon)
 - `SkillSound.lua` core event processing and saved-variable defaults
 - `Sounds.lua` custom sound registry framework backed by LibSharedMedia-3.0
-- `Options.lua` settings panel under **AddOns → SkillSound**
-
-## Rule management model
-
-- The options UI is intentionally **add-focused** and no longer shows per-row delete buttons.
-- Each spell/aura rule now gets a stable `ruleID` shown in the list.
-- Use slash commands for safe rule maintenance:
-  - `/skillsound list spells`
-  - `/skillsound list auras`
-  - `/skillsound remove spell <ruleID>`
-  - `/skillsound remove aura <ruleID>`
-  - `/skillsound clear spells`
-  - `/skillsound clear auras`
+- `Options.lua` settings panel under **Skeletor → SkillSound**
 
 ## Custom sounds
 
@@ -31,8 +19,3 @@ A World of Warcraft 12.0 addon that plays configurable sounds when:
 3. Reload UI (`/reload`)
 
 Each custom sound is registered into LibSharedMedia and can be selected in the options UI.
-
-
-## Patch notes
-
-- **v0.1.0**: Initial public build with configurable spell and aura triggers, plus custom sound preview support.
