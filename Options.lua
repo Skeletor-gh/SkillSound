@@ -20,6 +20,17 @@ local TAB_KEYS = {
     "custom",
 }
 
+local function SetDropdownMaxButtons(dropdown, count)
+    if type(UIDropDownMenu_SetMaxButtons) == "function" then
+        UIDropDownMenu_SetMaxButtons(dropdown, count)
+        return
+    end
+
+    -- This helper is missing in some client versions; storing the value
+    -- keeps compatibility with templates that check frame.maxButtons.
+    dropdown.maxButtons = count
+end
+
 local function ResolveSpellID(inputValue, fieldLabel)
     local normalized = inputValue and strtrim(inputValue) or ""
     if normalized == "" then
@@ -81,7 +92,7 @@ local function BuildDropdown(parent, width, items, defaultValue)
     local dropdown = CreateFrame("Frame", nil, parent, "UIDropDownMenuTemplate")
     UIDropDownMenu_SetWidth(dropdown, width)
     UIDropDownMenu_SetButtonWidth(dropdown, width + 20)
-    UIDropDownMenu_SetMaxButtons(dropdown, 12)
+    SetDropdownMaxButtons(dropdown, 12)
     dropdown.isSkillSoundDropdown = true
     dropdown.items = items
     dropdown.value = defaultValue
@@ -107,7 +118,7 @@ local function BuildSoundDropdown(parent, width)
     local dropdown = CreateFrame("Frame", nil, parent, "UIDropDownMenuTemplate")
     UIDropDownMenu_SetWidth(dropdown, width)
     UIDropDownMenu_SetButtonWidth(dropdown, width + 20)
-    UIDropDownMenu_SetMaxButtons(dropdown, 12)
+    SetDropdownMaxButtons(dropdown, 12)
     dropdown.isSkillSoundDropdown = true
 
     local function Rebuild()
