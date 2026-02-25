@@ -1,10 +1,9 @@
 ## Interface: 120000
 ## Title: SkillSound
 ## Notes: Play sounds for spell success and aura gains.
-## X-PatchNotes: v0.1.0 - Initial public build with spells, auras, and custom sound preview.
 ## Author: skeletor-gh
 ## Version: 0.1.0
-## IconTexture: Interface\AddOns\SkillSound\assets\icon
+## IconTexture: Interface\\AddOns\\SkillSound\\assets\\icon
 ## Category: Skeletor
 ## SavedVariables: SkillSoundDB
 
