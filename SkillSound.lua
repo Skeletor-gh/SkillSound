@@ -5,9 +5,21 @@ ns = SkillSound
 
 local LSM = LibStub("LibSharedMedia-3.0")
 
+local function GetAddonMetadataValue(name, field)
+    if C_AddOns and C_AddOns.GetAddOnMetadata then
+        return C_AddOns.GetAddOnMetadata(name, field)
+    end
+
+    if GetAddOnMetadata then
+        return GetAddOnMetadata(name, field)
+    end
+
+    return nil
+end
+
 ns.ADDON_NAME = addonName
-ns.VERSION = C_AddOns.GetAddOnMetadata(addonName, "Version") or "0.1.0"
-ns.AUTHOR = C_AddOns.GetAddOnMetadata(addonName, "Author") or "skeletor-gh"
+ns.VERSION = GetAddonMetadataValue(addonName, "Version") or "0.1.0"
+ns.AUTHOR = GetAddonMetadataValue(addonName, "Author") or "skeletor-gh"
 ns.DEFAULT_CHANNEL = "Master"
 
 ns.defaults = {
